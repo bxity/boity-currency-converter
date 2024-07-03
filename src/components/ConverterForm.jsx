@@ -1,20 +1,64 @@
 import CurrencySelect from "./CurrencySelect";
+import { useState } from "react";
 
 const ConverterForm = () => {
+  const [amount, setAmount] = useState(100);
+  const [fromCurrency, setFromCurrency] = useState("USD");
+  const [toCurrency, setToCurrency] = useState("ZAR");
+  const [result, setResult] = useState("");
+
+  const handleSwapCurrencies = () => {
+    setFromCurrency(toCurrency);
+    setToCurrency(fromCurrency);
+  };
+
+  const getExchangeRate = async () => {
+    const API_KEY = "b5780864033f7cfc7051500f";
+    const API_URL = `https://v6.exchangerate-api.com/v6/${API_KEY}/pair/${fromCurrency}/${toCurrency}`;
+
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) throw Error("Something went wrong!");
+
+      const data = await response.json();
+      const rate = (data.conversion_rate * amount).toFixed();
+      setResult(`${amount} ${fromCurrency} = ${rate} ${toCurrency}`);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    getExchangeRate();
+  };
+
+
+
+
   return (
-    <form className="converter-form">
+    <form className="converter-form" onSubmit={handleFormSubmit}>
       <div className="form-group">
         <label className="form-label">Enter Amount</label>
-        <input type="number" className="form-input" required />
+        <input
+          type="number"
+          className="form-input"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          required
+        />
       </div>
 
       <div className="form-group form-currency-group">
         <div className="form-section">
           <label className="form-label">From</label>
-          <CurrencySelect />
+          <CurrencySelect
+            selectedCurrency={fromCurrency}
+            handleCurrency={(e) => setFromCurrency(e.target.value)}
+          />
         </div>
 
-        <div className="swap-icon">
+        <div className="swap-icon" onClick={handleSwapCurrencies}>
           <svg
             width="16"
             viewBox="0 0 20 19"
@@ -29,16 +73,21 @@ const ConverterForm = () => {
 
         <div className="form-section">
           <label className="form-label">To</label>
-          <CurrencySelect />
+          <CurrencySelect
+            selectedCurrency={toCurrency}
+            handleCurrency={(e) => setToCurrency(e.target.value)}
+          />
         </div>
       </div>
 
       <button type="submit" className="submit-button">
         Get Exchange Rate
       </button>
-      <p className="exchange-rate-result">1 Rand = 0.054 USD</p>
+      <p className="exchange-rate-result">
+        {result}
+      </p>
     </form>
   );
-}
+};
 
-export default ConverterForm
+export default ConverterForm;
